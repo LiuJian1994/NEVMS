@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>大三电系统状态</title>
+    <link rel="stylesheet" href="../../static/modules/elementui/theme/index.css">
+    <link rel="stylesheet" href="../../static/modules/swiper/swiper.min.css">
+    <link rel="stylesheet" href="../../static/modules/animate.min.css">
+    <script src="../../static/modules/wow.min.js"></script>
+    <link rel="stylesheet" href="../../static/css/app.css">
+    <link rel="stylesheet" href="../../static/css/index.css">
+    <link rel="stylesheet" href="../../static/css/formModel.css">
+    <script src="../../static/modules/vue.min.js"></script>
+    <script src="../../static/modules/elementui/index.js"></script>
+    <script src="../../static/modules/swiper/swiper.min.js"></script>
+    <script src="../../static/iconfont/iconfont.js"></script>
+</head>
+<body>
+<el-container id="page" v-cloak>
+    <el-header height="auto" id="pageHeader">
+        <page-header></page-header>
+        <nav-menu></nav-menu>
+    </el-header>
+    <el-container>
+        <el-main id="main">
+            <div id="child-page">
+                <page-swiper></page-swiper>
+                <div class="content-box">
+                    <div class="header-wrapper">
+                        <div class="header-view">
+                            <el-button v-if="centerType" @click="history.go(-1)" :attr="{}" >返回</el-button>
+                            <el-breadcrumb separator-class="el-icon-arrow-right" >
+                                <el-breadcrumb-item>{{centerType?"个人中心":"首页"}}</el-breadcrumb-item>
+                                <el-breadcrumb-item>大三电系统状态</el-breadcrumb-item>
+                            </el-breadcrumb>
+                        </div>
+                        <el-form class="search-view" :model="searchQuery" :inline="true" label-width="80px" >
+                            <el-form-item class="query-input" label="车牌号">
+                                <el-input class="search_inp" v-model="searchQuery.chepaihao" placeholder="车牌号"></el-input>
+                            </el-form-item>
+                            <el-form-item class="option-btn">
+                                <el-button class="search-btn" type="primary" @click="searchClick">搜索</el-button>
+                                <el-button class="add-btn" type="primary" v-if="btnAuth('dasandianxitongzhuangtai','新增')" @click="addClick">新增</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                    <div class="list-wrapper">
+                        <div class="list-view">
+                            <div class="list" v-if="list.length">
+                                <div class="item" v-for="(item,index) in list" :key="index" @click="detailClick(item.id)">
+                                    <div class="img-wrapper">
+                                        <template v-if="item.cheliangtupian && item.cheliangtupian.substr(0,4)=='http'">
+                                            <el-image :src="item.cheliangtupian" fit="cover"></el-image>
+                                        </template>
+                                        <template v-else>
+                                            <el-image :src="item.cheliangtupian?baseUrl + item.cheliangtupian.split(',')[0]:''" fit="cover"></el-image>
+                                        </template>
+                                    </div>
+                                    <div class="infoItem-wrapper">
+                                        <div class="infoItem">车牌号：{{item.chepaihao}}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <el-empty description="空空如也"  v-else></el-empty>
+                            <div class="pagination-row">
+                                <el-pagination
+                                        :total="total"
+                                        :page-size="listQuery.limit"
+                                        :current-page.sync="listQuery.page"
+                                        :page-sizes="pageSizes"
+                                        @size-change="sizeChange"
+                                        @current-change="currentChange"
+                                        layout="prev, pager, next" :background="true" :hide-on-single-page="true" >
+                                </el-pagination>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <dasandianxitongzhuangtai-form ref="formRef" @change="getList"></dasandianxitongzhuangtai-form>
+            </div>
+        </el-main>
+    </el-container>
+    <el-footer height="auto">
+        <p></p>
+    </el-footer>
+</el-container>
+</body>
+<script src="../../static/modules/axios.min.js"></script>
+<script src="../../utils/http.js"></script>
+<script src="../../utils/system.js"></script>
+<script src="../../utils/global_mixin.js"></script>
+<script src="../../utils/toolUtil.js"></script>
+<!--引入组件-->
+<script src="../../components/page-header.js"></script>
+<script src="../../components/nav-menu.js"></script>
+<script src="formComponent.js"></script>
+<script src="../../components/swiper.js"></script>
+<script src="../../components/page-swiper.js"></script>
+<script>
+    var vm = new Vue({
+        el: '#page',
+        data(){
+            return{
+                tableName:'dasandianxitongzhuangtai',
+                formName:'大三电系统状态',
+                list:[],
+                total:0,
+                listQuery:{
+                    page: 1,
+                    limit: 8,
+                },
+                listLoading:false,
+                pageSizes:[20,50,100,200],
+                searchQuery:{},
+                centerType:false,
+                searchQuery:{},
+            }
+        },
+        created(){
+            this.centerType = toolUtil.getUrlParamsByKey("centerType")
+            this.init()
+        },
+        methods: {
+            sizeChange(size){
+                this.listQuery.limit = size
+                this.getList()
+            },
+            currentChange(page){
+                this.listQuery.page = page
+                this.getList()
+            },
+            //权限验证
+            btnAuth(e,a){
+                if(this.centerType){
+                    return toolUtil.isBackAuth(e,a)
+                }else{
+                    return toolUtil.isAuth(e,a)
+                }
+            },
+            addClick(){
+                this.$refs['formRef'].init()
+            },
+            init(){
+                this.getList()
+            },
+            searchClick(){
+                this.listQuery.page = 1
+                this.getList()
+            },
+            getList(){
+                this.listLoading = true
+                let params = JSON.parse(JSON.stringify(this.listQuery))
+                if(this.searchQuery.chepaihao && this.searchQuery.chepaihao!=''){
+                    params.chepaihao = '%' + this.searchQuery.chepaihao + '%'
+                }
+                http.get(`${this.tableName}/${this.centerType?'page':'list'}`,{
+                    params: params
+                }).then(res=>{
+                    this.listLoading = false
+                    this.list = res.data.data.list
+                    this.total = Number(res.data.data.total)
+                })
+            },
+            tableDetailClick(row){
+                location.href = `detail.html?id=${row.id}${this.centerType?'&&centerType=1':''}`
+            },
+            detailClick(id){
+                location.href = `detail.html?id=${id}${this.centerType?'&&centerType=1':''}`
+            },
+        }
+    })
+</script>
+<style>
+
+.el-main {
+    padding: 0 0 30px;
+    background: #edeef0;
+}
+
+
+.swiper-wrapper{
+   margin: 10px auto 0;
+   padding:0 10%;
+}
+.swiper-wrapper .swiper-slide .item{
+   width:80%;
+   margin: 0px auto;
+}
+.swiper-wrapper .swiper-slide .item img{
+   width:100%;
+   height:400px;
+   object-fit:cover;
+}
+
+.swiper-pagination span{ width:40px; height:8px; background:#56c68b; border-radius:0; }
+
+
+.content-box {
+    width: 100%;
+    margin: 0 auto;
+}
+
+
+.header-wrapper {
+    width: 80%;
+    margin:0 auto;
+    padding: 0 20px;
+    border-radius: 0px;
+    background-color: #fff;
+    margin-top:20px;
+    animation-name: bounceInDown;
+    animation-duration: 1s;
+}
+
+.header-view {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #edeef0;
+    height: 60px;
+    align-items: center;
+}
+
+.header-view .el-breadcrumb {
+}
+
+.header-view .el-button{
+    background: #f6f6f6;
+    padding: 0 20px;
+    height:32px;
+    line-height:32px;
+    border: 0px solid #eee;
+    border-radius: 0px;
+    order:2;
+}
+.header-view .el-button:focus,.header-view .el-button:hover {
+    color: #56c68b;
+    border-color: #56c68b50 !important;
+    background: #56c68b10;
+}
+.header-view .el-button:active {
+    color: #56c68b;
+    border-color: #2383e5;
+    outline: none
+}
+
+
+.search-view {
+    padding-top: 30px;
+}
+
+.search-view .el-form-item__content{
+}
+
+.search-view .el-form-item__content .el-input__inner{
+    height:32px;
+    line-height:32px;
+}
+.search-view .el-form-item__content .el-input__inner:focus {
+    outline: none;
+    border-color: #56c68b;
+}
+
+.search-view .el-form-item__content .search-btn{
+    color: #fff;
+    background: #5ec298;
+    border-color: #5ec298;
+    padding:0 10px;
+    height:32px;
+    line-height:32px;
+    min-width:80px;
+}
+.search-view .el-form-item__content .search-btn:hover{
+    color: #56c68b;
+    border-color: #56c68b50;
+    background: #56c68b10;
+}
+.search-view .el-form-item__content .add-btn{
+    color: #fff;
+    background: #5ec298;
+    border-color: #5ec298;
+    padding:0 10px;
+    height:32px;
+    line-height:32px;
+    min-width:80px;
+}
+.search-view .el-form-item__content .add-btn:hover{
+    color: #56c68b;
+    border-color: #56c68b50;
+    background: #56c68b10;
+}
+
+
+.category-view {
+    padding-bottom: 30px;
+}
+
+.category-list {
+    display: grid;
+    grid-template-columns: repeat(9,1fr);
+    grid-row-gap: 16px;
+}
+.category-list .category-item {
+    background: #eee;
+    border-radius: 0px;
+    line-height: 30px;
+    width: 100px;
+    text-align: center;
+    color: #666;
+    border: 0px solid #999;
+    cursor: pointer;
+    margin: 0 auto;
+-webkit-clip-path: polygon(5% 0, 100% 0%, 95% 100%, 0% 100%);
+clip-path: polygon(5% 0, 100% 0%, 95% 100%, 0% 100%);
+}
+.category-list .category-item:hover{
+    background: #56c68b;
+    color: #fff;
+    border: none;
+}
+.category-list .category-item.selected {
+    background: #56c68b;
+    color: #fff;
+    border: none;
+}
+
+
+
+.list-wrapper {
+    width: 100%;
+    padding: 0 10%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.list-view {
+    background: #fff;
+    margin-top: 30px;
+    padding: 20px;
+    border-radius: 0px;
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
+    animation-name: bounceInLeft;
+    animation-duration: 1s;
+}
+
+.list {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    row-gap: 24px;
+    column-gap: 24px;
+}
+.list .item {
+    box-shadow: 0 0px 0px rgba(0, 0, 0, 0.3);
+    border-radius: 0px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+.list .el-image {
+    height: 240px;
+    width: 100%;
+}
+
+.list .item .play-wrapper {
+    position: absolute;
+    top: -240px;
+    left: 0;
+    width: 100%;
+    height: 240px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.5);
+    transition: 300ms;
+}
+.list .item:hover .play-wrapper {
+    top: 0;
+}
+
+.list .item .play-wrapper .play .iconfont {
+    font-size: 66px;
+    color: rgba(255,255,255,0.8);
+}
+
+
+.list .item .infoItem-wrapper{
+    background: #eee;
+    padding:10px;
+}
+.list .item:hover .infoItem-wrapper{
+    background: #56c68b;
+    padding:10px;
+}
+
+
+.list .item .infoItem-wrapper .infoItem{
+    line-height: 24px;
+}
+
+.list .item .infoItem-wrapper .price{
+    color: #c00;
+    line-height: 24px;
+}
+
+
+
+.pagination-row {
+    text-align: center;
+    background-color: #fff;
+    padding: 30px 0;
+    border-radius: 0 0 8px 8px;
+}
+
+.pagination-row .el-pager{
+
+}
+.pagination-row .el-pager .number{
+
+}
+.pagination-row .el-pager .number:hover{
+    background: #56c68b;
+    color: #fff !important;
+}
+.pagination-row .el-pager .active{
+    background: #56c68b !important;
+    color: #fff !important;
+}
+.pagination-row .el-pager .more:hover{
+    background: #56c68b !important;
+    color: #fff !important;
+}
+
+
+.hot-view {
+    width: 200px;
+    margin-top: 30px;
+    background-color: #fff;
+    margin-left: 30px;
+    padding: 0 20px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0px;
+    padding-bottom: 20px;
+    animation-name: bounceInRight;
+    animation-duration: 1s;
+}
+
+.hot-view .title-row {
+    text-align: center;
+    line-height: 60px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.hot-view .hot-list {
+    overflow: auto;
+}
+.hot-view .hot-list .hot-item{
+    margin-bottom: 10px;
+    cursor:pointer;
+}
+
+.hot-view .hot-list .hot-item .el-image{
+}
+.hot-view .hot-list .hot-item .el-image img{
+}
+
+.hot-view .hot-list .hot-item .hot-text{
+    line-height: 24px;
+    text-align:center;
+}
+
+.hot-view .hot-list .hot-item:hover .hot-text{
+    background: #56c68b;
+    color:#fff;
+}
+
+.hot-list::-webkit-scrollbar {
+    display: none;
+}
+
+
+</style>
+</html>

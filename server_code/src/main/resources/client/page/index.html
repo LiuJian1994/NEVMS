@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>新能源汽车管理系统</title>
+    <link rel="stylesheet" href="../static/modules/elementui/theme/index.css">
+    <link rel="stylesheet" href="../static/modules/swiper/swiper.min.css">
+    <link rel="stylesheet" href="../static/modules/animate.min.css">
+    <script src="../static/modules/wow.min.js"></script>
+    <link rel="stylesheet" href="../static/css/app.css">
+    <link rel="stylesheet" href="../static/css/index.css">
+    <script src="../static/modules/vue.min.js"></script>
+    <script src="../static/modules/elementui/index.js"></script>
+    <script src="../static/modules/swiper/swiper.min.js"></script>
+    <script src="../static/iconfont/iconfont.js"></script>
+</head>
+<body>
+<el-container id="page" v-cloak>
+    <el-header height="auto" id="pageHeader">
+        <page-header></page-header>
+        <nav-menu></nav-menu>
+    </el-header>
+    <el-container>
+        <el-main id="main">
+        <div id="child-page">
+            <div class="swiper-row">
+                <page-swiper></page-swiper>
+            </div>
+            <div class="search-row">
+            </div>
+            <div class="news-row">
+                <!-- 新闻资讯 -->
+                <div class="news-box">
+                    <div class="title">新闻资讯</div>
+                    <div class="list">
+                        <div class="item" v-for="item in newsList" :key="item.id" @click="newsDetailClick(item.id)">
+                            <img v-if="isHttp(item.picture)" :src="item.picture.split(',')[0]">
+                            <img v-else :src="item.picture?baseUrl + item.picture.split(',')[0]:''">
+                            <div class="info">
+                                <div class="news-title">{{item.title}}</div>
+                                <div class="news-introduction">{{item.introduction}}</div>
+                                <div class="news-addTime">{{item.addtime.split(' ')[0]}}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="more" @click="moreClick('news')">
+                        <span>点击查看更多</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </el-main>
+    </el-container>
+    <el-footer height="auto">
+        <p></p>
+    </el-footer>
+</el-container>
+</body>
+<script src="../static/modules/axios.min.js"></script>
+<script src="../utils/http.js"></script>
+<script src="../utils/system.js"></script>
+<script src="../utils/global_mixin.js"></script>
+<script src="../utils/toolUtil.js"></script>
+<!--引入组件-->
+<script src="../components/page-header.js"></script>
+<script src="../components/nav-menu.js"></script>
+<script src="../components/swiper.js"></script>
+<script src="../components/page-swiper.js"></script>
+<script>
+    var vm = new Vue({
+        el: '#page',
+        data(){
+            return {
+                newsList:[],
+                token:toolUtil.storageGet("Token"),
+            }
+        },
+        created(){
+            this.init()
+        },
+        methods: {
+            init(){
+                this.getNewsList()
+            },
+            getNewsList(){
+                http.get('news/list',{
+                    params:{
+                        page:1,
+                        limit:6
+                    }
+                }).then(res=>{
+                    this.newsList = res.data.data.list
+                })
+            },
+            newsDetailClick(id=null){
+                if(id){
+                    location.href = `${baseUrl}client/page/news/detail.html?id=${id}`
+                }
+            },
+            //判断图片链接是否带http
+            isHttp(str){
+                return str && str.substr(0,4)=='http';
+            },
+            //跳转详情
+            detailClick(table,id){
+                location.href = `${baseUrl}client/page/${table}/detail.html?id=${id}`
+            },
+            moreClick(table){
+                location.href = `${baseUrl}client/page/${table}/list.html`
+            },
+        }
+    })
+</script>
+<script>
+//须先设置css盒子的animation-duration
+
+new WOW({
+    boxClass: 'search-box', //目标dom的class
+    animateClass: 'animate__bounceInDown', //动画名
+}).init()
+
+new WOW({
+    boxClass: 'recommend-box',
+    animateClass: 'animate__bounceInUp',
+}).init()
+
+new WOW({
+    boxClass: 'about-box',
+    animateClass: 'animate__bounceInUp',
+}).init()
+
+new WOW({
+    boxClass: 'show-box',
+    animateClass: 'animate__bounceInUp',
+}).init()
+
+new WOW({
+    boxClass: 'news-box',
+    animateClass: 'animate__bounceInUp',
+}).init()
+
+new WOW({
+    boxClass: 'systemInfo-box',
+    animateClass: 'animate__bounceInUp',
+}).init()
+
+
+</script>
+<style>
+
+.el-main {
+    padding:0;
+}
+
+
+.swiper-wrapper{
+   margin: 10px auto 0;
+   padding:0 10%;
+   animation-name: fadeInUpBig;
+   animation-duration: 1s;
+}
+.swiper-wrapper .swiper-slide .item{
+   width:80%;
+   margin: 0px auto;
+}
+.swiper-wrapper .swiper-slide .item img{
+   width:100%;
+   height:400px;
+   object-fit:cover;
+}
+
+.swiper-pagination span{ width:40px; height:8px; background:#56c68b; border-radius:0; }
+
+
+.search-row{
+   background: none;
+   margin: 30px auto 0;
+   padding:0 10%;
+    animation-duration: 1s;
+}
+
+.search-box {
+   display: flex;
+   border: 1px solid #eee;
+   border-radius: 30px;
+   overflow: hidden;
+   width: 50%;
+   margin: 0px auto;
+   animation-duration:1s;
+}
+.search-box input{
+    border: none;
+}
+
+.search-box .search-inp{
+    width:100%;
+    border: none;
+}
+
+.search-box .search-sel {
+    width: 180px;
+}
+.search-box .search-sel::after {
+    position: absolute;
+    top: 20%;
+    right: 0;
+    content: '';
+    width: 2px;
+    height: 60%;
+    background: #eee;
+}
+
+.search-box .el-button {
+    border: none;
+    border-radius: 0;
+    width: 100px;
+    border-left: 1px solid #eee;
+}
+.search-box .el-button:hover {
+    background:#56c68b;
+    color:#fff;
+}
+
+
+.el-main .title {
+   text-align: center;
+   font-size: 22px;
+   color:#56c68b;
+}
+.el-main .title:after{
+   display: inline-block;
+   width:100px;
+   height:34px;
+   background: url("") no-repeat left center / 100% 100%;
+   content:"——";
+   margin-left:20px;
+}
+.el-main .title:before{
+   display: inline-block;
+   width:100px;
+   height:34px;
+   background: url("") no-repeat left center / 100% 100%;
+   content:"——";
+   margin-right:20px;
+}
+
+.el-main .subtitle {
+    text-align: center;
+    font-size: 24px;
+    line-height: 1;
+    color:#ccc;
+}
+
+.more {
+    width: 120px;
+    text-align: center;
+    line-height: 40px;
+    margin: 20px auto 0;
+    cursor: pointer;
+    color: #fff;
+    border:1px solid #333;
+    background: #333;
+}
+.more:hover {
+    color: #56c68b;
+    border:1px solid #56c68b50;
+    background: #56c68b10;
+   animation-name: slideOutUp;
+   animation-duration: 0.3s;
+}
+
+
+.about-box {
+    margin: 50px auto 0;
+    padding:50px 10%;
+    background: url("http://clfile.zggen.cn/20231212/d87bd6161c2c45c7aac20b3ec6f2446b.jpg") no-repeat center top / 100% 100%;
+    animation-duration:1s;
+}
+.about-box .content {
+    text-indent: 2em;
+    line-height: 30px;
+    font-size: 16px;
+    color:#ccc;
+    margin-top: 20px;
+}
+
+.about-box .img-list{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+.about-box img {
+    width: 26vw;
+    object-fit: cover;
+}
+
+.about-box .swiper-wrapper{
+    margin-top: 40px;
+}
+.about-box .swiper-slide .item img{
+   height:200px;
+}
+
+
+
+.systemInfo-box {
+    margin: 50px auto 0;
+    padding:50px 10%;
+    background: url("http://clfile.zggen.cn/20231212/d87bd6161c2c45c7aac20b3ec6f2446b.jpg") no-repeat center top / 100% 100%;
+    clear:both;
+    overflow:hidden;
+    animation-duration:1s;
+}
+
+.systemInfo-box .content {
+    text-indent: 2em;
+    line-height: 30px;
+    font-size: 16px;
+    color:#ccc;
+    margin-top: 20px;
+    width:49%;
+    float:left;
+    height:360px;
+    overflow:hidden;
+}
+
+.systemInfo-box .img-list {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    width:49%;
+    height:360px;
+    float:right;
+}
+
+.systemInfo-box .img-list img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+
+.recommend-box {
+    margin: 50px 10% 20px;
+    position: relative;
+    animation-duration: 1s;
+}
+
+.recommend-box .list {
+    display: grid;
+    grid-template-areas:
+    'a1 a1 . . .'
+    '. . . a8 a8';
+    column-gap: 20px;
+    row-gap: 20px;
+    margin-top: 20px;
+}
+.recommend-box .list .item {
+    position: relative;
+    cursor: pointer;
+}
+.recommend-box .list .item:first-child {
+   grid-area: a1;
+}
+.recommend-box .list .item:last-child {
+   grid-area: a8;
+}
+
+.recommend-box .list .item img {
+    width: 100%;
+    height: 275px;
+    object-fit: cover;
+}
+
+.recommend-box .list .item .info {
+    position: absolute;
+    bottom: 0;
+    background: rgba(0,0,0,0.3);
+    color: #fff;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 10px;
+}
+
+.recommend-box .list .item .info .info-item {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 5px;
+}
+
+.recommend-box .list .item .info .price {
+    color: #e01222;
+    font-family: cursive;
+    font-weight: 700;
+    font-size: 18px;
+    text-align: right;
+}
+
+
+
+
+
+.show-box {
+    margin: 50px 10% 20px;
+    animation-duration:1s;
+}
+
+.show-box .list {
+    margin-top: 20px;
+    display: grid;
+       grid-template-areas:
+    'a1 a1 a1 a2 a2 '
+    '. . . . .';
+    column-gap: 20px;
+    row-gap: 20px;
+}
+.show-box .list .item {
+    box-shadow: 0 0px 0px rgba(0, 0, 0, 0.3);
+    background: #fff;
+}
+.show-box .list .item:nth-child(1) {
+   grid-area: a1;
+}
+.show-box .list .item:nth-child(2) {
+   grid-area: a2;
+}
+
+.show-box .list .item img {
+    width: 100%;
+    height: 350px;
+    object-fit: cover;
+}
+
+.show-box .info {
+    width: 100%;
+}
+
+.show-box .info-item{
+    padding: 10px 10px;
+    background:radial-gradient(circle, rgba(188,254,240,.3) 0%, rgba(230,255,251,.3) 100%),#fff;
+    color: #333;
+    text-align: center;
+    border:1px solid #56c68b30;
+    margin-bottom: 5px;
+}
+
+
+
+.news-box {
+    margin: 50px 10% 20px;
+    text-align: center;
+    animation-duration:1s;
+}
+
+.news-box .list {
+    margin-top: 20px;
+    display: grid;
+    grid-template-rows: 9vw 9vw 9vw 9vw;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 30px;
+    row-gap: 12px;
+}
+
+.news-box img {
+    width: 10vw;
+    height: 100%;
+    flex-shrink: 0;
+    object-fit: cover;
+    margin-right: 16px;
+    border-radius: 4px;
+}
+
+.news-box .list .item {
+    display: flex;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.news-box .list .item:first-child {
+    grid-area: 1/1/4/1;
+    position: relative;
+}
+.news-box .list .item:first-child .info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin: 0 10px 10px;
+    padding: 10px 20px;
+    width: calc(100% - 20px);
+    background-color: rgba(0,0,0,0.3);
+    color: #fff;
+}
+.news-box .item:first-child img {
+    width: 100%;
+    height: 100%;
+    margin-right: 0;
+}
+.news-box .item:first-child .news-introduction {
+    color: #ddd;
+}
+.news-box .item:first-child .news-addTime {
+    color: #ddd;
+    margin-top: 10px;
+}
+
+.news-box .info {
+    display: flex;
+    flex-direction: column;
+    width: 0;
+    flex: 1;
+    box-sizing: border-box;
+}
+
+.news-box .info .news-title {
+    font-weight: 700;
+    font-size: 16px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+
+.news-box .info .news-introduction {
+    line-height: 22px;
+    margin-top: 10px;
+    color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-align: left;
+}
+
+.news-box .info .news-addTime {
+    margin-top: auto;
+    text-align: right;
+    color: #999;
+    font-size: 14px;
+}
+.news-box {
+    position: relative;
+}
+
+.news-box .more::after {
+    font-family: 'element-icons';
+    content: '\E6E0';
+}
+
+
+</style>
+</html>

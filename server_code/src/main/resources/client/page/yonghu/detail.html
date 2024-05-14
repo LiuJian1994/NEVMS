@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>用户</title>
+    <link rel="stylesheet" href="../../static/modules/elementui/theme/index.css">
+    <link rel="stylesheet" href="../../static/modules/swiper/swiper.min.css">
+    <link rel="stylesheet" href="../../static/modules/animate.min.css">
+    <script src="../../static/modules/wow.min.js"></script>
+    <link rel="stylesheet" href="../../static/css/app.css">
+    <link rel="stylesheet" href="../../static/css/index.css">
+    <link rel="stylesheet" href="../../static/css/formModel.css">
+    <script src="../../static/modules/vue.min.js"></script>
+    <script src="../../static/modules/elementui/index.js"></script>
+    <script src="../../static/modules/swiper/swiper.min.js"></script>
+    <script src="../../static/modules/moment.min.js"></script>
+    <script src="../../static/iconfont/iconfont.js"></script>
+</head>
+<body>
+<el-container id="page" v-cloak>
+    <el-header height="auto" id="pageHeader">
+        <page-header></page-header>
+        <nav-menu></nav-menu>
+    </el-header>
+    <el-container>
+        <el-main id="main">
+            <div id="child-page">
+                <div class="content-box">
+                    <div class="header-wrapper">
+                        <div class="header-row">
+                            <el-button @click="history.go(-1)" size="small">返回</el-button>
+                        </div>
+                        <div class="swiper">
+                            <el-carousel :interval="4002" height="500px" >
+                                <el-carousel-item v-for="item in bannerList" :key="item.id">
+                                    <img :src="baseUrl+item">
+                                </el-carousel-item>
+                            </el-carousel>
+                        </div>
+                        <div class="info">
+                            <div>
+                                <div class="title-view">
+                                    <div class="title">
+                                        {{detail.yonghuming}}
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="label">姓名</div>
+                                    <div class="value" >
+                                        {{detail.xingming}}
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="label">性别</div>
+                                    <div class="value" >
+                                        {{detail.xingbie}}
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="label">生日</div>
+                                    <div class="value" >
+                                        {{detail.shengri}}
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="label">身份证</div>
+                                    <div class="value" >
+                                        {{detail.shenfenzheng}}
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="label">手机</div>
+                                    <div class="value" >
+                                        {{detail.shouji}}
+                                    </div>
+                                </div>
+                                <div class="btn-view">
+                                    <el-button v-if="centerType&&(detail.ispay=='未支付'||!detail.ispay)&&btnFrontAuth(tableName,'支付')" type="primary" @click="payClick">支付</el-button>
+                                    <el-button class="edit" v-if="centerType&&btnAuth('yonghu','修改')" type="primary" @click="editClick">修改</el-button>
+                                    <el-button class="delete" v-if="centerType&&btnAuth('yonghu','删除')" type="danger" @click="delClick">删除</el-button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <yonghu-form ref="formRef" @change="getDetail"></yonghu-form>
+            </div>
+        </el-main>
+    </el-container>
+    <el-footer height="auto">
+        <p></p>
+    </el-footer>
+</el-container>
+</body>
+<script src="../../static/modules/axios.min.js"></script>
+<script src="../../utils/http.js"></script>
+<script src="../../utils/system.js"></script>
+<script src="../../utils/global_mixin.js"></script>
+<script src="../../utils/toolUtil.js"></script>
+<!--引入组件-->
+<script src="../../components/page-header.js"></script>
+<script src="../../components/nav-menu.js"></script>
+<script src="formComponent.js"></script>
+<script>
+    var vm = new Vue({
+        el: '#page',
+        data(){
+            return{
+                tableName:'yonghu',
+                formName:'用户',
+                bannerList:[],
+                title:'',
+                detail:{},
+                activeName:'first',
+                centerType:false,   //判断是否从个人中心跳转
+            }
+        },
+        beforeCreate(){
+            let anchorPoint = location.href.match(/#[A-z]+$/g)
+            if(anchorPoint?.length){
+                window.onload = ()=>{
+                    setTimeout(()=>{
+                        location.href = anchorPoint
+                    },0)
+                }
+            }
+        },
+        created(){
+            this.centerType = toolUtil.getUrlParamsByKey("centerType")
+            this.init()
+        },
+        methods: {
+            //权限验证
+            btnAuth(e,a){
+                if(this.centerType){
+                    return toolUtil.isBackAuth(e,a)
+                }else{
+                    return toolUtil.isAuth(e,a)
+                }
+            },
+            //查看权限验证
+            btnFrontAuth(e,a){
+                if(this.centerType){
+                    return toolUtil.isBackAuth(e,a)
+                }else{
+                    return toolUtil.isFrontAuth(e,a)
+                }
+            },
+            getDetail(){
+                http.get(`${this.tableName}/detail/${toolUtil.getUrlParamsByKey("id")}`).then(res=>{
+                    this.title = res.data.data.yonghuming
+                    this.bannerList = res.data.data.touxiang?res.data.data.touxiang.split(','):[]
+                    this.detail = res.data.data
+                })
+            },
+            //下载文件
+            downClick(file){
+                if(!file){
+                    return this.$message.error('文件不存在')
+                }
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.setAttribute('target', '_blank');
+                a.setAttribute('download', file);
+                a.href = baseUrl + file;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            },
+            //判断是否从个人中心跳转
+            init(){
+                if(toolUtil.getUrlParamsByKey("centerType")){
+                    this.centerType = true
+                }
+                this.getDetail()
+            },
+            //修改
+            editClick(){
+                this.$refs['formRef'].init(this.detail.id,'edit')
+            },
+            //删除
+            delClick(){
+                this.$confirm(`是否删除此${this.formName}？`, '提示', {
+                    confirmButtonText: '是',
+                    cancelButtonText: '否',
+                    type: 'warning',
+                }).then(() => {
+                    http.post(`${this.tableName}/delete`,[this.detail.id]).then(res => {
+                        this.$message({
+                            type:'success',
+                            message:'删除成功',
+                            onClose:()=>{
+                                history.go(-1)
+                            }
+                        })
+                    })
+                })
+            },
+        }
+    })
+</script>
+<style>
+
+.el-main {
+    padding: 30px 0;
+    background: #edeef0;
+}
+
+
+.content-box {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 10%;
+}
+
+
+.header-wrapper {
+    background: #fff;
+    border-radius: 0px;
+    padding: 24px 30px;
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 20px;
+    column-gap: 20px;
+}
+
+.header-row {
+    width: 100%;
+}
+
+.header-row .el-button{
+    border-radius:0px;
+    min-width:80px;
+}
+.header-row .el-button:focus,.header-row .el-button:hover {
+    color: #56c68b;
+    border-color: #56c68b50;
+    background: #56c68b10;
+}
+
+
+.swiper {
+    width: 50%;
+    flex-shrink: 0;
+    animation-name: bounceInLeft;
+    animation-duration: 1s;
+}
+.el-carousel {
+    border-radius: 0px;
+}
+.el-carousel img {
+    width: 100%;
+    height: 100%;
+    object-fit:contain;
+    border:1px solid #eee;
+}
+
+
+.info{
+    flex: 1;
+    animation-name: bounceInRight;
+    animation-duration: 1s;
+}
+.info>div {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 10px;
+}
+
+.info .info-item {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    min-width: 50%;
+}
+.info-item .label {
+    width: 100px;
+    color: #333;
+}
+.info-item .value {
+    color: #666;
+}
+
+
+.info .title-view {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.info .title {
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.info .storeUp{
+    font-size: 16px;
+    margin-right: 10px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.info .storeUp>div {
+    display: flex;
+    align-items: center;
+    color:#f60;
+}
+
+ .info .storeUp .iconfont {
+    font-size:30px;
+    padding-left: 10px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+
+
+.like {
+    display: flex;
+    width: 100%;
+    margin-bottom:10px;
+}
+.like .zan{
+    cursor: pointer;
+    margin-right:10px;
+}
+.like .cai {
+    cursor: pointer;
+}
+
+
+
+.info-item.file {
+    width: 100%;
+}
+.info-item.file .el-button {
+    padding: 0 10px;
+    border:1px solid #eee;
+    height: 32px;
+    line-height: 32px;
+}
+.info-item.file .el-button:hover {
+    color: #56c68b;
+    border-color: #56c68b50;
+    background: #56c68b10;
+}
+
+
+
+#audio {
+    height:32px !important;
+}
+
+
+
+.btn-view .number {
+    width: auto;
+}
+.btn-view .number .el-input__inner{
+    height: 32px;
+    line-height: 32px;
+}
+.btn-view .number .el-input-number {
+    position: relative;
+    display: inline-block;
+    width: 150px;
+    height: 30px;
+    line-height: 30px;
+}
+.btn-view .number .el-input__inner:focus {
+    outline: none;
+    border-color: #56c68b;
+}
+.btn-view .number .el-input-number__decrease,.el-input-number__increase {
+    width: 40px;
+    height: auto;
+    text-align: center;
+    background:none; 
+    color:#606266; 
+}
+.btn-view .number .el-input-number__decrease:hover,.btn-view .number .el-input-number__increase:hover {
+    color: #56c68b;
+}
+.btn-view .number .el-input-number__decrease:hover:not(.is-disabled)~.el-input .el-input__inner:not(.is-disabled),.btn-view .number .el-input-number__increase:hover:not(.is-disabled)~.el-input .el-input__inner:not(.is-disabled) {
+    border-color: #56c68b;
+}
+
+
+.btn-view {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 10px;
+    column-gap: 10px;
+    width: 100%;
+}
+
+.btn-view .el-button {
+    height:32px;
+    line-height:32px;
+    padding:0 10px;
+}
+.btn-view .el-button:focus,.el-button:hover {
+}
+
+.btn-view .cart{
+    color: #fff;
+    background: #56c68b;
+    border-color: #56c68b;
+}
+.btn-view .cart:hover{
+    color: #56c68b;
+    background: #56c68b10;
+    border-color: #56c68b50;
+}
+
+.btn-view .buy{
+    color: #fff;
+    background: #56c68b;
+    border-color: #56c68b;
+}
+.btn-view .buy:hover{
+    color: #56c68b;
+    background: #56c68b10;
+    border-color: #56c68b50;
+}
+
+.btn-view .auction{
+    color: #fff;
+    background: #56c68b;
+    border-color: #56c68b;
+}
+.btn-view .auction:hover{
+    color: #56c68b;
+    background: #56c68b10;
+    border-color: #56c68b50;
+}
+
+.btn-view .pay{
+    color: #fff;
+    background: #56c68b;
+    border-color: #56c68b;
+}
+.btn-view .pay:hover{
+    color: #56c68b;
+    background: #56c68b10;
+    border-color: #56c68b50;
+}
+
+
+.btn-view .new-group{
+    color: #fff;
+    background: #56c68b;
+    border-color: #56c68b;
+}
+.btn-view .new-group:hover{
+    color: #56c68b;
+    background: #56c68b10;
+    border-color: #56c68b50;
+}
+
+.btn-view .join-group{
+    color: #fff;
+    background: #56c68b;
+    border-color: #56c68b;
+}
+.btn-view .join-group:hover{
+    color: #56c68b;
+    background: #56c68b10;
+    border-color: #56c68b50;
+}
+
+
+
+.tabs {
+    background: #fff;
+    margin-top: 30px;
+    padding: 20px 20px 30px;
+    border-radius: 0px;
+    min-height: 320px;
+    animation-name: bounceInUp;
+    animation-duration: 1s;
+}
+.tabs .el-tabs__header{
+    background: #56c68b10;
+}
+.tabs .el-tabs__nav{
+    padding:0 20px;
+}
+
+.tabs .el-tabs__active-bar {
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    height: 2px;
+    background: #56c68b;
+}
+.tabs .el-tabs__header .el-tabs__item.is-active {
+    color: #56c68b;
+}
+.tabs .el-tabs__header .el-tabs__item:hover {
+    color: #56c68b;
+}
+
+
+.el-tabs__content{
+
+}
+
+.el-table{
+
+}
+
+.el-table .el-table__header tr{
+    background: #56c68b;
+    color:#fff;
+ }
+.el-table .el-table__header tr th.el-table__cell {
+    background:none;
+    padding:6px 0;
+}
+.el-table tr{
+}
+.el-table td.el-table__cell,.el-table th.el-table__cell.is-leaf {
+    border-bottom: 1px solid #eee;
+}
+.el-table--border:after,.el-table--group:after,.el-table:before {
+    background: none;
+}
+
+.el-table .el-image{
+    max-width:100px;
+    max-height:100px;
+    object-fit:contain;
+}
+.el-table--enable-row-hover .el-table__body tr:hover>td.el-table__cell {
+    background: #56c68b10;
+}
+
+
+#catalogue{
+    padding:20px;
+}
+
+#catalogue .list-title {
+    font-weight: 600;
+}
+
+#catalogue .free-list,#catalogue .vip-list {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    grid-column-gap: 20px;
+    grid-row-gap: 10px;
+    margin: 10px;
+}
+#catalogue .item {
+    border: 1px solid #eee;
+    line-height: 28px;
+    padding: 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    position: relative;
+    text-align: left;
+    color:#666;
+}
+#catalogue .item:hover {
+    color: #56c68b;
+    border-color: #56c68b50;
+    background: #56c68b10;
+}
+
+#catalogue .item .iconfont {
+    position: absolute;
+    font-size: 14px;
+    top: 8px;
+    right: 4px;
+}
+
+
+
+.el-tab-pane{
+    padding:20px;
+}
+
+.el-tab-pane .comment-form{
+}
+
+.el-tab-pane .comment-form .el-textarea__inner{
+    color: #606266;
+    background: #fff;
+    border: 1px solid #dcdfe6;
+    border-radius: 0px;
+}
+.el-tab-pane .comment-form .el-textarea__inner:focus {
+    border-color: #56c68b;
+}
+
+.el-tab-pane .comment-form .btns{
+}
+.el-tab-pane .comment-form .btns .el-button--primary {
+    color: #fff;
+    background: #56c68b;
+    border-color: #56c68b;
+}
+.el-tab-pane .comment-form .btns .el-button--primary:focus,.el-tab-pane .comment-form .btns .el-button--primary:hover {
+    background: #56c68b10;
+    border-color: #56c68b50;
+    color: #56c68b;
+}
+.el-tab-pane .comment-form .btns .el-button{
+    height:32px;
+    line-height:32px;
+    padding:0 20px;
+}
+.el-tab-pane .comment-form .btns .el-button:focus,.el-tab-pane .comment-form .btns .el-button:hover {
+    background: #56c68b10;
+    border-color: #56c68b50;
+    color: #56c68b;
+}
+.el-tab-pane .comment-form .btns .el-button:active {
+    background: #56c68b10;
+    border-color: #56c68b50;
+    color: #56c68b;
+}
+
+
+.comment-list {
+    margin-top: 30px;
+}
+.comment-list .list{
+}
+.comment-list .list .item{
+    background: #fcfcfc;
+    border:1px solid #eee;
+    margin-bottom: 20px;
+    padding:10px;
+}
+.comment-list .list .item:hover{
+    background: #56c68b10;
+    border:1px solid #56c68b50;
+}
+
+.comment-list .list .item .item-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.comment-list .list .item .item-header .comment-user{
+    display: flex;
+    align-items: center;
+}
+
+.comment-list .list .item .item-header .comment-user .el-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.comment-list .list .item .item-header .comment-user .comment-username {
+    font-size: 14px;
+    color: #666;
+}
+
+.comment-list .list .item .item-header .comment-time{
+    margin-left: 20px;
+    color: #999;
+}
+
+.comment-list .list .item .comment-content {
+    padding-left: 50px;
+    color: #666;
+}
+
+.comment-list .list .item .comment-reply{
+    color: #999;
+    margin-top: 5px;
+}
+
+.comment-list .pagination {
+    text-align: center;
+    padding-top: 20px;
+}
+.el-pagination.is-background .el-pager li:hover {
+    background: #56c68b;
+    color: #fff !important;
+}
+.el-pagination.is-background .el-pager li:not(.disabled):hover {
+    color: #56c68b;
+}
+.el-pagination.is-background .el-pager li:not(.disabled).active {
+    background: #56c68b;
+    color: #fff;
+}
+
+
+
+.seatList {
+    display: grid;
+    grid-template-columns: repeat(8,1fr);
+    grid-gap: 20px;
+}
+.seatList .item{
+    background: #fcfcfc;
+    border:1px solid #eee;
+    padding:10px;
+    text-align: center;
+}
+.seatList .item:hover{
+    background: #56c68b10;
+    border:1px solid #56c68b50;
+}
+.seatList .item .seat {
+    text-align: center;
+    display: inline-block;
+    cursor: pointer;
+}
+.seatList .item .seat .selected {
+    color: #dd4d41;
+}
+.seatList .item .seat .active {
+    color: #56c68b;
+}
+
+.seatList .item .seat .iconfont {
+    font-size: 40px;
+}
+
+.seatList .item .seat .seatText{
+    font-size: 14px;
+    color: #333;
+}
+
+
+
+.hot-wrapper{
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hot {
+    background: #fff;
+    border-radius: 0px;
+    padding:10px 20px;
+    flex:2;
+}
+
+.hot .title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 50px;
+}
+
+.hot .list {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    grid-column-gap: 20px;
+    grid-row-gap: 20px;
+}
+.hot .list .item{
+    cursor:pointer;
+}
+
+.hot .list .item .el-image {
+    width: 100%;
+    height: 150px;
+    border-radius: 8px;
+}
+
+.hot .list .item .el-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hot .list .item .hot-info{
+}
+.hot .list .item .hot-info .info-item {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+
+
+.video-wrapper {
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.video {
+    width: 320px;
+    text-align: center;
+    flex:1;
+    margin-left:30px;
+}
+
+video {
+    width: 100%;
+    height: 240px;
+}
+
+
+</style>
+</html>

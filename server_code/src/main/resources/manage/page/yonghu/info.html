@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>用户</title>
+    <link rel="stylesheet" href="../../static/modules/elementui/theme/index.css">
+    <link rel="stylesheet" href="../../static/css/app.css">
+    <link rel="stylesheet" href="../../static/css/index.css">
+    <link rel="stylesheet" href="../../static/modules/animate.min.css">
+    <script src="../../static/modules/wow.min.js"></script>
+    <script src="../../static/modules/vue.min.js"></script>
+    <script src="../../static/modules/vue.min.js"></script>
+    <script src="../../static/modules/elementui/index.js"></script>
+    <script src="../../static/iconfont/iconfont.js"></script>
+</head>
+<body>
+<el-container id="page" v-cloak>
+    <el-header height="auto">
+        <page-header></page-header>
+    </el-header>
+    <el-container>
+        <page-aside>
+            <template v-slot:menu>
+                <page-menus></page-menus>
+            </template>
+        </page-aside>
+        <el-main>
+            <div class="child-page">
+                <el-form ref="form" :model="user" class="form" label-width="120px" style="margin: 20px 0;">
+                    <el-row>
+                            <el-col :span="24">
+                                <el-form-item label="用户名" prop="yonghuming">
+                                    <el-input class="list_inp" v-model="user.yonghuming" disabled placeholder="用户名" clearable />
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="24">
+                                <el-form-item label="姓名" prop="xingming">
+                                    <el-input class="list_inp" v-model="user.xingming"  placeholder="姓名" clearable />
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="24">
+                                <el-form-item label="性别" prop="xingbie">
+                                        <el-select
+                                                class="list_sel"
+                                                v-model="user.xingbie"
+                                                placeholder="请选择性别"
+                                        >
+
+                                        <el-option v-for="item in yonghuxingbieLists" :label="item" :value="item"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="24">
+                                <el-form-item label="生日" prop="shengri">
+                                    <el-date-picker
+                                            class="list_date"
+                                            v-model="user.shengri"
+                                            format="yyyy 年 MM 月 dd 日"
+                                            value-format="yyyy-MM-dd"
+                                            type="datetime"
+                                            placeholder="生日" />
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="24">
+                                <el-form-item label="身份证" prop="shenfenzheng">
+                                    <el-input class="list_inp" v-model="user.shenfenzheng"  placeholder="身份证" clearable />
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="24">
+                                <el-form-item label="手机" prop="shouji">
+                                    <el-input class="list_inp" v-model="user.shouji"  placeholder="手机" clearable />
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="24">
+                                <el-form-item label="头像" prop="touxiang">
+                                    <file-upload
+                                            tip="点击上传头像"
+                                            action="file/upload"
+                                            :limit="3"
+                                            :file-urls="user.touxiang?user.touxiang:''"
+                                            @change="yonghutouxiangUploadSuccess">
+                                    ></file-upload>
+                                </el-form-item>
+                            </el-col>
+                        <div class="btn-row" style="text-align: center">
+                            <el-button class='userinfo_confirm' type="primary" @click="onSubmit">保存</el-button>
+                        </div>
+                    </el-row>
+                </el-form>
+            </div>
+        </el-main>
+    </el-container>
+</el-container>
+</body>
+<script src="../../static/modules/axios.min.js"></script>
+<script src="../../utils/http.js"></script>
+<script src="../../utils/toolUtil.js"></script>
+<script src="../../utils/global_mixin.js"></script>
+<!--引入组件-->
+<script src="../../components/pageHeader.js"></script>
+<script src="../../components/pageMenus.js"></script>
+<script src="../../components/pageAside.js"></script>
+<script src="../../components/FileUpload.js"></script>
+<script>
+    var vm = new Vue({
+        el: '#page',
+        data(){
+            return {
+                user:{
+                                yonghuming:null,
+                                xingming:null,
+                                xingbie:null,
+                                shengri:null,
+                                shenfenzheng:null,
+                                shouji:null,
+                                touxiang:null,
+                },
+                        yonghuxingbieLists:[],
+            }
+        },
+        mounted(){
+            this.getInfo()
+        },
+        methods: {
+            init(){
+                        this.yonghuxingbieLists = "男,女".split(',')
+            },
+                    yonghutouxiangUploadSuccess(fileUrls){
+                        this.user.touxiang = fileUrls;
+                    },
+            onSubmit(){
+                        if(!this.user.yonghuming){
+                            return this.$message.error('用户名不能为空')
+                        }
+                        if(!this.user.mima){
+                            return this.$message.error('密码不能为空')
+                        }
+                        if(!this.user.xingming){
+                            return this.$message.error('姓名不能为空')
+                        }
+                        if(!this.user.shengri){
+                            return this.$message.error('生日不能为空')
+                        }
+                        if(!this.user.shenfenzheng){
+                            return this.$message.error('身份证不能为空')
+                        }
+                        if((this.user.shenfenzheng)&& !toolUtil.checkIdCard(this.user.shenfenzheng) ){
+                            return this.$message.error('身份证应输入身份证格式')
+                        }
+                        if(!this.user.shouji){
+                            return this.$message.error('手机不能为空')
+                        }
+                        if((this.user.shouji)&& !toolUtil.isMobile(this.user.shouji) ){
+                            return this.$message.error('手机应输入手机格式')
+                        }
+                        if(this.user.touxiang!=null){
+                            this.user.touxiang = this.user.touxiang.replace(new RegExp(baseUrl,"g"),"");
+                        }
+                http.post('yonghu/update',this.user).then(res=>{
+                    this.$message.success('修改成功')
+                })
+            },
+            getInfo(){
+                http.get('yonghu/session').then(res=>{
+                    for(let key in res.data.data){
+                        this.user[key] = res.data.data[key]
+                    }
+                    this.init()
+                })
+            },
+        }
+    })
+</script>
+</html>

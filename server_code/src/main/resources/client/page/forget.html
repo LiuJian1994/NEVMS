@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>找回密码</title>
+    <link rel="stylesheet" href="../static/modules/elementui/theme/index.css">
+    <link rel="stylesheet" href="../static/modules/animate.min.css">
+    <script src="../static/modules/wow.min.js"></script>
+    <link rel="stylesheet" href="../static/css/app.css">
+    <link rel="stylesheet" href="../static/css/index.css">
+    <script src="../static/modules/vue.min.js"></script>
+    <script src="../static/modules/elementui/index.js"></script>
+    <script src="../static/iconfont/iconfont.js"></script>
+</head>
+<body>
+<el-container id="page" v-cloak>
+    <el-main id="main">
+        <div class="forget-wrapper">
+            <div class="from-name">找回密码</div>
+            <el-steps ref="steps" :active="pageType" class="steps" :align-center="true" finish-status="success" >
+                <el-step title="获取密保" >
+                </el-step>
+                <el-step title="验证密保" >
+                </el-step>
+                <el-step title="重置密码" >
+                </el-step>
+            </el-steps>
+            <el-form :model="forgetForm" class="forget-form" size="small" label-width="80px" >
+            </el-form>
+            <div class="btns">
+                <el-button v-if="pageType==0" class="getSecurity" type="primary" @click="getSecurity">获取密保</el-button>
+                <el-button v-if="pageType==1" class="validateSecurity" type="primary" @click="validateSecurity">确认密保</el-button>
+                <el-button v-if="pageType==2" class="updatePassword" type="primary" @click="updatePassword">重置密码</el-button>
+            </div>
+        </div>
+    </el-main>
+</el-container>
+</body>
+<script src='../static/modules/axios.min.js'></script>
+<script src="../utils/http.js"></script>
+<script src="../utils/system.js"></script>
+<script src="../utils/global_mixin.js"></script>
+<script src="../utils/toolUtil.js"></script>
+
+<script src="../components/page-header.js"></script>
+<script>
+    var vm = new Vue({
+        el: '#page',
+        data(){
+            return {
+                pageType:1,
+                forgetForm:{},
+                userForm:{},
+            }
+        },
+        methods: {
+        },
+
+    })
+</script>
+<script>
+//须先设置css盒子的animation-duration
+
+new WOW({
+    boxClass: 'search-box', //目标dom的class
+    animateClass: 'animate__bounceInDown', //动画名
+}).init()
+
+new WOW({
+    boxClass: 'recommend-box',
+    animateClass: 'animate__bounceInUp',
+}).init()
+
+new WOW({
+    boxClass: 'about-box',
+    animateClass: 'animate__bounceInUp',
+}).init()
+
+new WOW({
+    boxClass: 'show-box',
+    animateClass: 'animate__bounceInUp',
+}).init()
+
+new WOW({
+    boxClass: 'news-box',
+    animateClass: 'animate__bounceInUp',
+}).init()
+
+new WOW({
+    boxClass: 'systemInfo-box',
+    animateClass: 'animate__bounceInUp',
+}).init()
+
+
+</script>
+<style>
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #56c68b;
+    
+    background-image: -webkit-linear-gradient(45deg,
+            rgba(255, 255, 255, 0.4) 25%,
+            transparent 25%,
+            transparent 50%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0.4) 75%,
+            transparent 75%,
+            transparent);
+    border-radius: 32px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #56c68b50;
+    border-radius: 32px;
+}
+
+
+#page {
+}
+
+
+#main{
+    background: url("http://clfile.zggen.cn/20231206/6494cf32934945c489df96b8d97b94e6.jpg") no-repeat center center / cover;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.forget-wrapper{
+    background: rgb(255, 255, 255);
+    box-sizing: border-box;
+    padding-bottom: 30px;
+    width: 650px;
+    min-height:500px;
+    border: 0px solid rgb(255, 255, 255);
+    z-index: 1;
+   box-shadow:0px 1px 5px #999;
+}
+
+
+.forget-wrapper .from-name{
+    padding: 10px 0px;
+    margin: 0px 0px 40px;
+    color: #fff;
+    background: #56c68b;
+    width: 100%;
+    font-size: 22px;
+    line-height: 40px;
+    text-align: center;
+    animation-name: bounceInDown;
+    animation-duration: 1s;
+}
+
+
+.steps{
+    padding: 0px 10%;
+    margin-bottom: 40px;
+    animation-name:fadeInUp;
+    animation-duration:1s;
+}
+
+
+.forget-form{
+    padding: 0 0px;
+}
+
+
+.forget-form .el-form-item {
+    display:flex;
+}
+
+
+.forget-form label.el-form-item__label {
+    min-width: 150px;
+    animation-name: bounceInLeft;
+    animation-duration: 2s;
+}
+
+
+.forget-form .el-form-item__content {
+    width: calc(100% - 250px);
+    margin-left:0px !important;
+    animation-name: bounceInRight;
+    animation-duration: 2s;
+}
+
+
+.forget-form .el-input__inner{
+    border:1px solid #eee;
+    border-radius:0px;
+}
+.forget-form .el-input__inner:hover,.forget-form .el-input__inner:focus{
+border:1px solid #27AE60;
+}
+
+
+.btns{
+  width:100%;
+}
+
+
+.btns .el-button--primary {
+    width: calc(100% - 250px);
+    margin-left:150px;
+    border-radius:0px;
+    color: #fff;
+    background-color: #56c68b;
+    border-color: #56c68b;
+    animation-name: bounceInUp;
+    animation-duration: 1s;
+}
+.btns .el-button--primary:focus,.btns .el-button--primary:hover {
+    color: #fff
+    border-color: #333;
+    background: #333;
+}
+
+</style>
+</html>
