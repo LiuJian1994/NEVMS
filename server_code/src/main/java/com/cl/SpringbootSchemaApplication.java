@@ -13,7 +13,12 @@ public class SpringbootSchemaApplication extends SpringBootServletInitializer{
 	public static void main(String[] args) {
 		SpringApplication.run(SpringbootSchemaApplication.class, args);
 	}
-	
+
+
+
+
+//kjjj
+
 	@Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder applicationBuilder) {
         return applicationBuilder.sources(SpringbootSchemaApplication.class);
