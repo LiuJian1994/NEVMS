@@ -17,7 +17,7 @@ public class SpringbootSchemaApplication extends SpringBootServletInitializer{
 
 
 
-//kjjj
+
 
 	@Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder applicationBuilder) {
